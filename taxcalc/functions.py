@@ -9,7 +9,7 @@ parameters (as would be done in a reform that introduces chained-CPI
 indexing).
 """
 # CODING-STYLE CHECKS:
-# pep8 functions.py
+# pycodestyle functions.py
 # pylint --disable=locally-disabled functions.py
 #
 # pylint: disable=too-many-lines
@@ -313,9 +313,6 @@ def CapGains(p23250, p22250, sep, ALD_StudentLoan_hc,
     ymod1 = (e00200 + e00700 + e00800 + e01400 + e01700 +
              invinc - invinc_agi_ec + e02100 + e02300 +
              max(e00900 + e02000, -ALD_BusinessLosses_c[MARS - 1]))
-    # compute business loss excluded from ymod1 but included in expanded_income
-    excluded_loss = min(e00900 + e02000 + ALD_BusinessLosses_c[MARS - 1], 0.)
-    c02900 += excluded_loss
     if CG_nodiff:
         # apply QDIV+CG exclusion if QDIV+LTCG receive no special tax treatment
         qdcg_pos = max(0., e00650 + c01000)
@@ -327,7 +324,7 @@ def CapGains(p23250, p22250, sep, ALD_StudentLoan_hc,
     ymod2 = e00400 + (0.50 * e02400) - c02900
     ymod3 = (1. - ALD_StudentLoan_hc) * e03210 + e03230 + e03240
     ymod = ymod1 + ymod2 + ymod3
-    return (c01000, c23650, ymod, ymod1, invinc_agi_ec, c02900)
+    return (c01000, c23650, ymod, ymod1, invinc_agi_ec)
 
 
 @iterate_jit(nopython=True)
@@ -1703,8 +1700,8 @@ def BenefitSurtax(calc):
     to income tax, combined tax, and surtax liabilities.
     """
     if calc.policy_param('ID_BenefitSurtax_crt') != 1.:
-        benefit_surtax_switch = calc.policy_param('ID_BenefitSurtax_Switch')
-        ben = ComputeBenefit(calc, benefit_surtax_switch)
+        ben = ComputeBenefit(calc,
+                             calc.policy_param('ID_BenefitSurtax_Switch'))
         agi = calc.array('c00100')
         ben_deduct = calc.policy_param('ID_BenefitSurtax_crt') * agi
         ben_exempt_array = calc.policy_param('ID_BenefitSurtax_em')

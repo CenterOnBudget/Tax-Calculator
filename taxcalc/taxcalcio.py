@@ -2,7 +2,7 @@
 Tax-Calculator Input-Output class.
 """
 # CODING-STYLE CHECKS:
-# pep8 taxcalcio.py
+# pycodestyle taxcalcio.py
 # pylint --disable=locally-disabled taxcalcio.py
 
 import os
@@ -289,7 +289,7 @@ class TaxCalcIO(object):
             base.implement_reform(basedict['policy'],
                                   print_warnings=False,
                                   raise_errors=False)
-            self.errmsg += base.reform_errors
+            self.errmsg += base.parameter_errors
         except ValueError as valerr_msg:
             self.errmsg += valerr_msg.__str__()
         # ... the reform Policy object
@@ -300,7 +300,7 @@ class TaxCalcIO(object):
                     pol.implement_reform(poldict,
                                          print_warnings=False,
                                          raise_errors=False)
-                    self.errmsg += pol.reform_errors
+                    self.errmsg += pol.parameter_errors
                 except ValueError as valerr_msg:
                     self.errmsg += valerr_msg.__str__()
         else:
@@ -460,19 +460,20 @@ class TaxCalcIO(object):
                               self.calc.reform_warnings,
                               'CONTINUING WITH CALCULATIONS...'))
         calc_base_calculated = False
-        if output_dump or output_sqldb:
-            # might need marginal tax rates
-            (mtr_paytax, mtr_inctax,
-             _) = self.calc.mtr(wrt_full_compensation=False)
-        else:
-            # definitely do not need marginal tax rates
-            mtr_paytax = None
-            mtr_inctax = None
         if self.behavior_has_any_response:
             self.calc = Behavior.response(self.calc_base, self.calc)
             calc_base_calculated = True
         else:
             self.calc.calc_all()
+        if output_dump or output_sqldb:
+            # might need marginal tax rates
+            (mtr_paytax, mtr_inctax,
+             _) = self.calc.mtr(wrt_full_compensation=False,
+                                calc_all_already_called=True)
+        else:
+            # definitely do not need marginal tax rates
+            mtr_paytax = None
+            mtr_inctax = None
         # optionally conduct normative welfare analysis
         if output_ceeu:
             if self.behavior_has_any_response:
@@ -606,6 +607,7 @@ class TaxCalcIO(object):
         Write to tfile the tkind decile table using dfx DataFrame.
         """
         dfx = add_quantile_table_row_variable(dfx, 'expanded_income', 10,
+                                              decile_details=False,
                                               weight_by_income_measure=False)
         gdfx = dfx.groupby('table_row', as_index=False)
         rtns_series = gdfx.apply(unweighted_sum, 's006')
